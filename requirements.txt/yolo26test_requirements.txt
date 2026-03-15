@@ -1,3 +1,7 @@
+# this requirements.txt file should work for:
+# YOLO_test.py & segmentation_test.py
+# therefore, use the same conda environment for both 
+
 # steps to create conda environment and download these dependencies (done on macbook pro m4 chip)
 # 1. download conda if not already installed
 # terminal setup:

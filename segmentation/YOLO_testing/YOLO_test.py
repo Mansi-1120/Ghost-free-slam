@@ -4,7 +4,7 @@ from ultralytics import YOLO
 
 # Before running this script, be sure to follow the documentation I put in the yolo25test requirements.txt file
 # command that I used in terminal to run this file (assuming CD'd in main project directory)
-# python3 segmentation/YOLO_testing/YOLO_test.py
+# $ python3 segmentation/YOLO_testing/YOLO_test.py
 
 # checks to make sure GPU is used rather than CPU
 if torch.backends.mps.is_available():
