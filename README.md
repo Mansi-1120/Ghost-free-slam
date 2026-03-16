@@ -49,7 +49,7 @@ Ghost-free-slam/
 └── README.md
 
 
-# 👥 Team Responsibilities
+## 👥 Team Responsibilities
 
 | Member | Responsibility |
 |------|------|
@@ -91,7 +91,7 @@ Example sequences used in this project:
 
 Due to size constraints, datasets are not stored in this repository and are maintained on the Boston University SCC cluster.
 
-##🧪 Experimental Configurations
+## 🧪 Experimental Configurations
 
 We evaluate three configurations:
 
