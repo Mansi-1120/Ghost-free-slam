@@ -69,7 +69,7 @@ git clone https://github.com/Mansi-1120/Ghost-free-slam.git
 cd Ghost-free-slam
 ```
 
-## Install dependencies:
+Install dependencies:
 
 ```Bash
 pip install -r requirements.txt
