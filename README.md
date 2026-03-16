@@ -10,16 +10,43 @@ This project studies whether **instance-level dynamic segmentation combined with
 Rather than proposing a new SLAM algorithm, the project provides a **controlled empirical analysis** of how dynamic filtering influences **Absolute Trajectory Error (ATE)** in dense RGB-D sequences.
 
 
-# 🔬 System Pipeline
+## 🔬 System Pipeline
 
-TUM RGB-D Dataset │ ▼ Instance Segmentation (YOLO-based) │ ▼ Dynamic Pixel Masking │ ▼ ORB-SLAM3 │ ▼ Trajectory Estimation │ ▼ Evaluation using EVO (ATE)
+TUM RGB-D Dataset
+│
+▼
+Instance Segmentation (YOLO-based)
+│
+▼
+Dynamic Pixel Masking
+│
+▼
+ORB-SLAM3
+│
+▼
+Trajectory Estimation
+│
+▼
+Evaluation using EVO (ATE)
 
 This modular pipeline allows us to isolate how segmentation-based dynamic filtering affects SLAM localization accuracy.
 
 
-# 📁 Repository Structure
+## 📁 Repository Structure
 
-Ghost-free-slam/ │ ├── segmentation/        # YOLO-based instance segmentation ├── masking/             # Remove dynamic pixels using segmentation masks ├── slam/                # ORB-SLAM3 execution scripts ├── evaluation/          # Trajectory evaluation using EVO ├── examples/            # Example outputs and visualizations ├── demos/               # Demo videos and qualitative comparisons ├── configs/             # Experiment configuration files ├── docs/                # Proposal, reports, and slides │ ├── requirements.txt     # Python dependencies └── README.md
+Ghost-free-slam/
+│
+├── segmentation/ # YOLO-based instance segmentation
+├── masking/ # Remove dynamic pixels using segmentation masks
+├── slam/ # ORB-SLAM3 execution scripts
+├── evaluation/ # Trajectory evaluation using EVO
+├── examples/ # Example outputs and visualizations
+├── demos/ # Demo videos and qualitative comparisons
+├── configs/ # Experiment configuration files
+├── docs/ # Proposal, reports, and slides
+│
+├── requirements.txt # Python dependencies
+└── README.md
 
 
 # 👥 Team Responsibilities
@@ -33,7 +60,7 @@ Ghost-free-slam/ │ ├── segmentation/        # YOLO-based instance segmen
 | **Brendan Coyne** | Dataset preparation, experiment automation, and visualization |
 
 
-# ⚙ Installation
+## ⚙ Installation
 
 Clone the repository:
 
@@ -48,7 +75,7 @@ Bash
 Copy code
 pip install -r requirements.txt
 
-📊 Dataset
+## 📊 Dataset
 
 Experiments use the TUM RGB-D Dataset, a widely used benchmark for visual SLAM research.
 
@@ -74,21 +101,21 @@ We evaluate three configurations:
 
 This controlled comparison isolates the effect of dynamic filtering on localization accuracy.
 
-🧠 Geometric Recovery Strategy
+## 🧠 Geometric Recovery Strategy
 
 When masked regions correspond to static areas previously observed, geometry is recovered using depth-consistent reprojection.
 Previously observed 3D points are transformed into the current frame using camera poses and depth measurements.
 Only depth-consistent points are retained to prevent introducing inconsistent geometry.
 If a region has never been observed before, no reconstruction is performed and those pixels remain excluded from feature extraction.
 
-📈 Evaluation Metric
+## 📈 Evaluation Metric
 
 Localization performance is evaluated using:
 Absolute Trajectory Error (ATE)
 ATE measures the difference between the estimated trajectory and the ground truth trajectory provided by the dataset.
 Trajectory evaluation is performed using the EVO toolkit.
 
-🖥 SCC Experiment Structure
+## 🖥 SCC Experiment Structure
 
 Experiments are executed on the Boston University Shared Computing Cluster (SCC).
 
@@ -100,9 +127,9 @@ dynamic_slam/
 ├── trajectories/       # SLAM trajectory files
 ├── trained_models/     # segmentation weights
 │
-└── Ghost-free-slam/    # GitHub repository (this project)
+└── Ghost-free-slam/    # GitHub repository (after this project)
 
-🎯 Research Objective
+## 🎯 Research Objective
 
 This project aims to answer the following research question:
 
@@ -110,7 +137,7 @@ Does segmentation-based dynamic removal combined with minimal geometric reprojec
 
 The focus is on measuring localization behavior rather than proposing a new SLAM formulation.
 
-📚 References
+## 📚 References
 
 Campos et al., 2021 — ORB-SLAM3: An Accurate Open-Source Library for Visual, Visual-Inertial, and Multi-Map SLAM
 
@@ -120,7 +147,10 @@ Bescos et al., 2018 — DynaSLAM: Tracking, Mapping and Inpainting in Dynamic Sc
 
 Yu et al., 2018 — DS-SLAM: A Semantic Visual SLAM Towards Dynamic Environments
 
-👩‍💻 Maintainer
-Mansi Singh
-Lead Researcher
-MS Robotics, Boston University
+## 👩‍💻 Maintainer
+
+**Mansi Singh**  
+Lead Researcher  
+MS Robotics, Boston University  
+
+🔗 GitHub: https://github.com/Mansi-1120
