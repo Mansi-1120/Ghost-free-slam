@@ -72,7 +72,6 @@ cd Ghost-free-slam
 # Install dependencies:
 
 ```Bash
-Copy code
 pip install -r requirements.txt
 ```
 
