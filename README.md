@@ -71,9 +71,10 @@ cd Ghost-free-slam
 
 # Install dependencies:
 
-Bash
+```Bash
 Copy code
 pip install -r requirements.txt
+```
 
 ## 📊 Dataset
 
