@@ -175,8 +175,8 @@ The focus is on measuring localization behavior rather than proposing a new SLAM
 
 ## 👩‍💻 Maintainer
 
-**Mansi Singh**
-Lead Researcher
-MS Robotics, Boston University
+**Mansi Singh** <br>
+Lead Researcher <br>
+MS Robotics, Boston University <br>
 
 🔗 GitHub: https://github.com/Mansi-1120
