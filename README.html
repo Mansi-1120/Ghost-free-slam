@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ghost-Free SLAM</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f7f5;
+    --bg-info: #e8f1fb;
+    --text: #1a1a18;
+    --text2: #5a5a56;
+    --text3: #9a9a94;
+    --text-info: #185fa5;
+    --border: rgba(0,0,0,0.10);
+    --border2: rgba(0,0,0,0.18);
+    --border-info: #b5d4f4;
+    --green: #1D9E75;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+    --display: 'Syne', sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #252523;
+      --bg-info: #0c2a45;
+      --text: #e8e8e2;
+      --text2: #9a9a92;
+      --text3: #5a5a56;
+      --text-info: #85b7eb;
+      --border: rgba(255,255,255,0.10);
+      --border2: rgba(255,255,255,0.18);
+      --border-info: #185fa5;
+      --green: #5DCAA5;
+    }
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  /* Hero */
+  .hero {
+    border-bottom: 0.5px solid var(--border);
+    padding-bottom: 1.8rem;
+    margin-bottom: 2.2rem;
+  }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .hero .sub {
+    font-size: 15px;
+    color: var(--text2);
+    margin-bottom: 1.2rem;
+  }
+  .hero p {
+    font-size: 14px;
+    color: var(--text2);
+    max-width: 660px;
+    line-height: 1.75;
+    margin-bottom: 0.5rem;
+  }
+  .hero strong { color: var(--text); font-weight: 500; }
+
+  /* Section title */
+  .section-title {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    margin: 2.2rem 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+  }
+  .divider {
+    flex: 1;
+    height: 0.5px;
+    background: var(--border);
+    margin-left: 6px;
+  }
+
+  /* Pipeline */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 0.5rem 0 1.2rem;
+  }
+  .pipe-box {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 270px;
+    text-align: center;
+  }
+  .pipe-box.highlight {
+    background: var(--bg-info);
+    border-color: var(--border-info);
+    color: var(--text-info);
+  }
+  .pipe-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-left: 135px;
+  }
+  .pipe-arrow svg { display: block; }
+
+  /* Tree block */
+  .tree-block {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.4rem;
+    line-height: 2.1;
+    margin-bottom: 1rem;
+    white-space: pre;
+    overflow-x: auto;
+    color: var(--text2);
+  }
+  .folder { color: var(--text-info); font-weight: 500; }
+  .comment { color: var(--text3); }
+  .root { color: var(--text); font-weight: 500; }
+
+  /* Team table */
+  .team-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-bottom: 1rem;
+  }
+  .team-table th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--text3);
+    padding: 0 12px 8px;
+    border-bottom: 0.5px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .team-table td {
+    padding: 9px 12px;
+    border-bottom: 0.5px solid var(--border);
+    vertical-align: top;
+    font-size: 13.5px;
+  }
+  .team-table tr:last-child td { border-bottom: none; }
+  .name { font-weight: 500; color: var(--text); }
+  .role { color: var(--text2); }
+
+  /* Code block */
+  .code-block {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1.2rem;
+    margin: 0.5rem 0 1rem;
+    line-height: 1.9;
+    color: var(--text2);
+    overflow-x: auto;
+  }
+  .cmd { color: #1D9E75; }
+  .arg { color: var(--text-info); }
+
+  /* Pills */
+  .pill-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0.6rem 0 1rem; }
+  .pill {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 12px;
+    color: var(--text2);
+  }
+
+  /* Experiment cards */
+  .exp-cards { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem; }
+  .exp-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .exp-num {
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text3);
+    min-width: 24px;
+    line-height: 1.3;
+  }
+  .exp-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .exp-desc { font-size: 13px; color: var(--text2); line-height: 1.55; }
+
+  /* Geo steps */
+  .geo-steps { display: flex; flex-direction: column; margin-bottom: 1rem; }
+  .geo-step {
+    display: flex;
+    gap: 14px;
+    padding: 11px 0;
+    border-bottom: 0.5px solid var(--border);
+    align-items: flex-start;
+  }
+  .geo-step:last-child { border-bottom: none; }
+  .geo-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--text3);
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+  .geo-text { font-size: 14px; color: var(--text2); line-height: 1.65; }
+
+  /* Metric badge */
+  .metric-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-info);
+    border: 0.5px solid var(--border-info);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-info);
+    margin: 0.5rem 0 0.8rem;
+  }
+
+  /* Research question */
+  .rq-box {
+    border-left: 3px solid var(--border-info);
+    background: var(--bg-info);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-info);
+    line-height: 1.65;
+    margin: 0.5rem 0 0.8rem;
+  }
+
+  /* References */
+  .ref-list { list-style: none; display: flex; flex-direction: column; gap: 7px; margin-bottom: 1rem; }
+  .ref-list li {
+    font-size: 13px;
+    color: var(--text2);
+    padding-left: 18px;
+    position: relative;
+    line-height: 1.6;
+  }
+  .ref-list li::before { content: '—'; position: absolute; left: 0; color: var(--text3); }
+
+  /* Maintainer */
+  .maintainer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 1.5rem;
+  }
+  .avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--bg-info);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 500;
+    color: var(--text-info);
+    flex-shrink: 0;
+  }
+  .maintainer-name { font-size: 15px; font-weight: 500; color: var(--text); }
+  .maintainer-role { font-size: 13px; color: var(--text2); margin-bottom: 2px; }
+  .gh-link { font-size: 13px; color: var(--text-info); text-decoration: none; }
+  .gh-link:hover { text-decoration: underline; }
+
+  p { font-size: 14px; color: var(--text2); line-height: 1.75; margin-bottom: 0.5rem; }
+  a { color: var(--text-info); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Ghost-Free SLAM 🚀</h1>
+    <div class="sub">Recovering Static Scene Geometry in Crowded Dynamic Environments</div>
+    <p>Ghost-Free SLAM investigates how dynamic objects influence localization accuracy in visual SLAM systems operating in crowded indoor environments.</p>
+    <p>Feature-based SLAM systems assume that most observed features belong to static scene structure. In real environments, moving people introduce dynamic features that corrupt data association and increase trajectory drift.</p>
+    <p>This project studies whether <strong>instance-level dynamic segmentation combined with lightweight geometric reprojection</strong> improves localization stability without modifying the SLAM backend.</p>
+    <p>Rather than proposing a new SLAM algorithm, the project provides a <strong>controlled empirical analysis</strong> of how dynamic filtering influences <strong>Absolute Trajectory Error (ATE)</strong> in dense RGB-D sequences.</p>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="section-title">🔬 System Pipeline <span class="divider"></span></div>
+  <div class="pipeline">
+    <div><div class="pipe-box">TUM RGB-D Dataset</div></div>
+    <div class="pipe-arrow"><svg width="1" height="24" viewBox="0 0 1 24"><line x1="0.5" y1="0" x2="0.5" y2="15" stroke="#aaa" stroke-width="1"/><polygon points="0.5,24 -4,13 5,13" fill="#aaa"/></svg></div>
+    <div><div class="pipe-box">Instance Segmentation (YOLO-based)</div></div>
+    <div class="pipe-arrow"><svg width="1" height="24" viewBox="0 0 1 24"><line x1="0.5" y1="0" x2="0.5" y2="15" stroke="#aaa" stroke-width="1"/><polygon points="0.5,24 -4,13 5,13" fill="#aaa"/></svg></div>
+    <div><div class="pipe-box">Dynamic Pixel Masking</div></div>
+    <div class="pipe-arrow"><svg width="1" height="24" viewBox="0 0 1 24"><line x1="0.5" y1="0" x2="0.5" y2="15" stroke="#aaa" stroke-width="1"/><polygon points="0.5,24 -4,13 5,13" fill="#aaa"/></svg></div>
+    <div><div class="pipe-box highlight">ORB-SLAM3</div></div>
+    <div class="pipe-arrow"><svg width="1" height="24" viewBox="0 0 1 24"><line x1="0.5" y1="0" x2="0.5" y2="15" stroke="#aaa" stroke-width="1"/><polygon points="0.5,24 -4,13 5,13" fill="#aaa"/></svg></div>
+    <div><div class="pipe-box">Trajectory Estimation</div></div>
+    <div class="pipe-arrow"><svg width="1" height="24" viewBox="0 0 1 24"><line x1="0.5" y1="0" x2="0.5" y2="15" stroke="#aaa" stroke-width="1"/><polygon points="0.5,24 -4,13 5,13" fill="#aaa"/></svg></div>
+    <div><div class="pipe-box">Evaluation using EVO (ATE)</div></div>
+  </div>
+  <p>This modular pipeline allows us to isolate how segmentation-based dynamic filtering affects SLAM localization accuracy.</p>
+
+  <!-- REPO STRUCTURE -->
+  <div class="section-title">📁 Repository Structure <span class="divider"></span></div>
+  <div class="tree-block"><span class="root">Ghost-free-slam/</span>
+│
+├── <span class="folder">segmentation/</span>      <span class="comment"># YOLO-based instance segmentation</span>
+├── <span class="folder">masking/</span>           <span class="comment"># Remove dynamic pixels using segmentation masks</span>
+├── <span class="folder">slam/</span>              <span class="comment"># ORB-SLAM3 execution scripts</span>
+├── <span class="folder">evaluation/</span>        <span class="comment"># Trajectory evaluation using EVO</span>
+├── <span class="folder">examples/</span>          <span class="comment"># Example outputs and visualizations</span>
+├── <span class="folder">demos/</span>             <span class="comment"># Demo videos and qualitative comparisons</span>
+├── <span class="folder">configs/</span>           <span class="comment"># Experiment configuration files</span>
+├── <span class="folder">docs/</span>              <span class="comment"># Proposal, reports, and slides</span>
+│
+├── requirements.txt   <span class="comment"># Python dependencies</span>
+└── README.md</div>
+
+  <!-- TEAM -->
+  <div class="section-title">👥 Team Responsibilities <span class="divider"></span></div>
+  <table class="team-table">
+    <thead><tr><th>Member</th><th>Responsibility</th></tr></thead>
+    <tbody>
+      <tr><td class="name">Mansi Singh</td><td class="role">ORB-SLAM3 integration and SLAM experiment design</td></tr>
+      <tr><td class="name">Tianqin Fu</td><td class="role">SLAM experiments and trajectory analysis</td></tr>
+      <tr><td class="name">Bhoomika Monthy Rajashekar</td><td class="role">Instance segmentation pipeline</td></tr>
+      <tr><td class="name">Devinn Chi</td><td class="role">YOLO model configuration and mask generation</td></tr>
+      <tr><td class="name">Brendan Coyne</td><td class="role">Dataset preparation, experiment automation, and visualization</td></tr>
+    </tbody>
+  </table>
+
+  <!-- INSTALLATION -->
+  <div class="section-title">⚙ Installation <span class="divider"></span></div>
+  <p>Clone the repository:</p>
+  <div class="code-block"><span class="cmd">git clone</span> <span class="arg">https://github.com/Mansi-1120/Ghost-free-slam.git</span>
+<span class="cmd">cd</span> Ghost-free-slam</div>
+  <p>Install dependencies:</p>
+  <div class="code-block"><span class="cmd">pip install</span> <span class="arg">-r requirements.txt</span></div>
+
+  <!-- DATASET -->
+  <div class="section-title">📊 Dataset <span class="divider"></span></div>
+  <p>Experiments use the TUM RGB-D Dataset, a widely used benchmark for visual SLAM research.</p>
+  <p>🔗 <a href="https://vision.in.tum.de/data/datasets/rgbd-dataset">https://vision.in.tum.de/data/datasets/rgbd-dataset</a></p>
+  <p style="margin-top:0.6rem;">Example sequences used in this project:</p>
+  <div class="pill-list">
+    <span class="pill">freiburg3_walking_xyz</span>
+    <span class="pill">freiburg3_sitting_xyz</span>
+    <span class="pill">freiburg3_walking_static</span>
+  </div>
+  <p>Due to size constraints, datasets are not stored in this repository and are maintained on the Boston University SCC cluster.</p>
+
+  <!-- EXPERIMENTS -->
+  <div class="section-title">🧪 Experimental Configurations <span class="divider"></span></div>
+  <p>We evaluate three configurations:</p>
+  <div class="exp-cards">
+    <div class="exp-card">
+      <div class="exp-num">1</div>
+      <div>
+        <div class="exp-title">Baseline ORB-SLAM3</div>
+        <div class="exp-desc">Standard ORB-SLAM3 with no dynamic filtering applied. Serves as the performance baseline for comparison.</div>
+      </div>
+    </div>
+    <div class="exp-card">
+      <div class="exp-num">2</div>
+      <div>
+        <div class="exp-title">Segmentation Masking Only</div>
+        <div class="exp-desc">Dynamic pixels identified by instance segmentation are masked before feature extraction, removing moving objects from SLAM input.</div>
+      </div>
+    </div>
+    <div class="exp-card">
+      <div class="exp-num">3</div>
+      <div>
+        <div class="exp-title">Segmentation + Geometric Reprojection</div>
+        <div class="exp-desc">Dynamic pixels are masked, and previously observed static geometry is recovered via depth-consistent reprojection to preserve useful features.</div>
+      </div>
+    </div>
+  </div>
+  <p>This controlled comparison isolates the effect of dynamic filtering on localization accuracy.</p>
+
+  <!-- GEO RECOVERY -->
+  <div class="section-title">🧠 Geometric Recovery Strategy <span class="divider"></span></div>
+  <div class="geo-steps">
+    <div class="geo-step"><div class="geo-dot"></div><div class="geo-text">When masked regions correspond to static areas previously observed, geometry is recovered using depth-consistent reprojection.</div></div>
+    <div class="geo-step"><div class="geo-dot"></div><div class="geo-text">Previously observed 3D points are transformed into the current frame using camera poses and depth measurements.</div></div>
+    <div class="geo-step"><div class="geo-dot"></div><div class="geo-text">Only depth-consistent points are retained to prevent introducing inconsistent geometry.</div></div>
+    <div class="geo-step"><div class="geo-dot"></div><div class="geo-text">If a region has never been observed before, no reconstruction is performed and those pixels remain excluded from feature extraction.</div></div>
+  </div>
+
+  <!-- METRIC -->
+  <div class="section-title">📈 Evaluation Metric <span class="divider"></span></div>
+  <p>Localization performance is evaluated using:</p>
+  <div class="metric-badge">📐 Absolute Trajectory Error (ATE)</div>
+  <p>ATE measures the difference between the estimated trajectory and the ground truth trajectory provided by the dataset. Trajectory evaluation is performed using the <strong>EVO toolkit</strong>.</p>
+
+  <!-- SCC -->
+  <div class="section-title">🖥 SCC Experiment Structure <span class="divider"></span></div>
+  <p>Experiments are executed on the Boston University Shared Computing Cluster (SCC).</p>
+  <div class="tree-block"><span class="root">dynamic_slam/</span>
+│
+├── <span class="folder">dataset/</span>           <span class="comment"># TUM RGB-D sequences</span>
+├── <span class="folder">logs/</span>              <span class="comment"># Experiment logs</span>
+├── <span class="folder">results/</span>           <span class="comment"># Experiment outputs</span>
+├── <span class="folder">trajectories/</span>      <span class="comment"># SLAM trajectory files</span>
+├── <span class="folder">trained_models/</span>    <span class="comment"># Segmentation weights</span>
+│
+└── <span class="folder">Ghost-free-slam/</span>   <span class="comment"># GitHub repository (after this project)</span></div>
+
+  <!-- RESEARCH OBJECTIVE -->
+  <div class="section-title">🎯 Research Objective <span class="divider"></span></div>
+  <p>This project aims to answer the following research question:</p>
+  <div class="rq-box">Does segmentation-based dynamic removal combined with minimal geometric reprojection reduce trajectory drift in crowded indoor RGB-D sequences?</div>
+  <p>The focus is on measuring localization behavior rather than proposing a new SLAM formulation.</p>
+
+  <!-- REFERENCES -->
+  <div class="section-title">📚 References <span class="divider"></span></div>
+  <ul class="ref-list">
+    <li>Campos et al., 2021 — ORB-SLAM3: An Accurate Open-Source Library for Visual, Visual-Inertial, and Multi-Map SLAM</li>
+    <li>Mur-Artal & Tardós, 2017 — ORB-SLAM2: An Open-Source SLAM System for Monocular, Stereo, and RGB-D Cameras</li>
+    <li>Bescos et al., 2018 — DynaSLAM: Tracking, Mapping and Inpainting in Dynamic Scenes</li>
+    <li>Yu et al., 2018 — DS-SLAM: A Semantic Visual SLAM Towards Dynamic Environments</li>
+  </ul>
+
+  <!-- MAINTAINER -->
+  <div class="section-title">👩‍💻 Maintainer <span class="divider"></span></div>
+  <div class="maintainer">
+    <div class="avatar">MS</div>
+    <div>
+      <div class="maintainer-name">Mansi Singh</div>
+      <div class="maintainer-role">Lead Researcher · MS Robotics, Boston University</div>
+      <a class="gh-link" href="https://github.com/Mansi-1120">🔗 github.com/Mansi-1120</a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
