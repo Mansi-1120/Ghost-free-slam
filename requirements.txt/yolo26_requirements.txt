@@ -1,5 +1,5 @@
 # this requirements.txt file should work for:
-# YOLO_test.py & segmentation_test.py
+# run_segmentation.py
 # therefore, use the same conda environment for both 
 
 # steps to create conda environment and download these dependencies (done on macbook pro m4 chip)
@@ -7,7 +7,7 @@
 # terminal setup:
 # 2. conda create --name name_here -y
 # 3. conda activate name_here
-# 4. pip3 install -r requirements.txt/yolo26test_requirements.txt
+# 4. pip3 install -r requirements.txt/yolo26_requirements.txt
 
 # YOLO-related dependencies
 ultralytics>=8.3.0
