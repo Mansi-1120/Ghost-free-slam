@@ -1,0 +1,20 @@
+# this requirements.txt file should work for:
+# run_segmentation.py
+# therefore, use the same conda environment for both 
+
+# steps to create conda environment and download these dependencies (done on macbook pro m4 chip)
+# 1. download conda if not already installed
+# terminal setup:
+# 2. conda create --name name_here -y
+# 3. conda activate name_here
+# 4. pip3 install -r requirements.txt/yolo26_requirements.txt
+
+# YOLO-related dependencies
+ultralytics>=8.3.0
+torch>=2.4.0
+torchvision>=0.19.0
+
+# general dependencies for ML
+opencv-python
+numpy<2.0.0
+matplotlib
