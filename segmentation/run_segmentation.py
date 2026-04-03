@@ -1,13 +1,17 @@
+# THIS SCRIPT ASSUMES A SPECIFIC DIRECTORY STRUCTURE AS IN THE SCC. 
+# You shouldn't need to change anything to run it, just ensure it is in a 
+# directory in the scc. A folder called segmentation/masks will be generated
+# in whichever directory you are presently in
+
 import os
 import cv2
 import torch
 from ultralytics import YOLO
 
 # this script assumes that it is run from the DYNAMIC_SLAM directory on the SCC
-
 def run_segmentation():
     base_dir = os.getcwd()
-    dataset_root = os.path.join(base_dir, "dataset/tum_rgbd")
+    dataset_root = "/projectnb/cs585/projects/dynamic_slam/dataset/tum_rgbd"
     output_root = os.path.join(base_dir, "segmentation/masks")
     
     # each of these should correspond to one section of the dataset
@@ -45,7 +49,7 @@ def run_segmentation():
             img_path = os.path.join(seq_path, rel_img_path)
             
             # use YOLO26 for segmentation
-            results = model.predict(img_path, conf=0.3, verbose=False)
+            results = model.predict(img_path, conf=0.3, verbose=False, classes=[0])
             
             # extract masks and save them to the directory intended
             if results[0].masks is not None:
