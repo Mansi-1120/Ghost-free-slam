@@ -150,6 +150,59 @@ def build_overlay(original: np.ndarray,
     return overlay
 
 
+def compute_metrics(original: np.ndarray,
+                    masked:   np.ndarray,
+                    mask:     np.ndarray) -> dict:
+    """
+    Compute per-image difference statistics between original and masked frame.
+
+    Returns a dict with:
+      pixels_total    — total pixel count
+      pixels_masked   — number of dynamic pixels
+      pct_masked      — percentage of image masked
+      mae             — mean absolute error over the whole image
+      mse             — mean squared error over the whole image
+      mean_diff_masked — mean absolute pixel change in masked region only
+    """
+    h, w    = original.shape[:2]
+    total   = h * w
+    dynamic = int((mask == 255).sum())
+    pct     = 100.0 * dynamic / total
+
+    diff        = original.astype(np.float32) - masked.astype(np.float32)
+    mae         = float(np.mean(np.abs(diff)))
+    mse         = float(np.mean(diff ** 2))
+
+    dyn_region  = mask == 255
+    if dyn_region.any():
+        mean_diff_masked = float(np.mean(np.abs(diff[dyn_region])))
+    else:
+        mean_diff_masked = 0.0
+
+    return {
+        "pixels_total":      total,
+        "pixels_masked":     dynamic,
+        "pct_masked":        round(pct, 2),
+        "mae":               round(mae, 4),
+        "mse":               round(mse, 4),
+        "mean_diff_masked":  round(mean_diff_masked, 4),
+    }
+
+
+def save_diff_image(original: np.ndarray,
+                    masked:   np.ndarray,
+                    out_path: str) -> None:
+    """
+    Save a false-colour difference image:
+      - Brighter = larger pixel change.
+      - Uses COLORMAP_HOT so zero-diff areas are black and high-diff areas are white/red.
+    """
+    diff      = np.abs(original.astype(np.int16) - masked.astype(np.int16))
+    diff_gray = diff.max(axis=2).astype(np.uint8)          # per-pixel max channel diff
+    diff_vis  = cv2.applyColorMap(diff_gray, cv2.COLORMAP_HOT)
+    cv2.imwrite(out_path, diff_vis)
+
+
 def save_comparison(original: np.ndarray,
                     overlay: np.ndarray,
                     masked: np.ndarray,

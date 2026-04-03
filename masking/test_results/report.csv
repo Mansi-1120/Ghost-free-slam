@@ -1,0 +1,5 @@
+test,pixels_total,pixels_masked,pct_masked,mae,mse,mean_diff_masked
+test1_single_bbox,76800,16800,21.88,29.6647,5025.3799,135.6102
+test2_multi_bbox,76800,18300,23.83,30.2303,4865.8862,126.8681
+test3_mask_file,76800,26174,34.08,44.506,7180.8008,130.5899
+test4_full_frame,76800,76800,100.0,130.0187,20398.7852,130.0187

@@ -13,10 +13,17 @@ Test cases
   3. Full binary mask file   — PNG mask loaded from disk
   4. Full-frame mask         — entire image masked (edge case)
 
+Outputs per test
+────────────────
+  *_comparison.png   — 3-panel: Original / Overlay / Masked
+  *_diff.png         — false-colour pixel difference heatmap
+  report.csv         — per-image metrics (% masked, MAE, MSE, mean diff)
+
 Run:
   python masking/test_masking.py
 """
 
+import csv
 import os
 import sys
 import numpy as np
@@ -33,7 +40,8 @@ os.makedirs(FRAME_DIR, exist_ok=True)
 
 # add project root so we can import apply_mask helpers directly
 sys.path.insert(0, ROOT)
-from masking.apply_mask import load_or_build_mask, apply_mask, build_overlay, save_comparison
+from masking.apply_mask import (load_or_build_mask, apply_mask, build_overlay,
+                                save_comparison, compute_metrics, save_diff_image)
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -86,15 +94,15 @@ def verify(test_name: str,
 
 def run_test(test_name: str,
              image:     np.ndarray,
-             mask_arg:  str) -> bool:
+             mask_arg:  str) -> tuple:
     """
     Full pipeline for one test case:
-      load mask → apply → verify → save comparison PNG.
+      load mask → apply → verify → save comparison + diff PNG → return metrics.
+    Returns (passed: bool, metrics: dict).
     """
     print(f"\n── {test_name} ──")
     h, w = image.shape[:2]
 
-    # save frame so apply_mask CLI path also works
     frame_path = os.path.join(FRAME_DIR, f"{test_name}.png")
     cv2.imwrite(frame_path, image)
 
@@ -104,9 +112,20 @@ def run_test(test_name: str,
 
     comp_path = os.path.join(OUT_DIR, f"{test_name}_comparison.png")
     save_comparison(image, overlay, masked, comp_path)
-    print(f"  Saved → {comp_path}")
 
-    return verify(test_name, image, masked, mask)
+    diff_path = os.path.join(OUT_DIR, f"{test_name}_diff.png")
+    save_diff_image(image, masked, diff_path)
+
+    print(f"  Saved comparison → {comp_path}")
+    print(f"  Saved diff       → {diff_path}")
+
+    metrics = compute_metrics(image, masked, mask)
+    print(f"  Metrics: {metrics['pct_masked']:.1f}% masked | "
+          f"MAE={metrics['mae']} | MSE={metrics['mse']} | "
+          f"mean_diff_masked={metrics['mean_diff_masked']}")
+
+    passed = verify(test_name, image, masked, mask)
+    return passed, {"test": test_name, **metrics}
 
 
 # ── test cases ────────────────────────────────────────────────────────────────
@@ -122,22 +141,17 @@ def test_multi_bbox():
 
 
 def test_mask_file():
-    """Build a binary mask PNG on disk and load it."""
     img = make_image(seed=3)
     h, w = img.shape[:2]
-
     mask_img = np.zeros((h, w), dtype=np.uint8)
-    cv2.rectangle(mask_img, (50, 30), (270, 130), 255, -1)   # top region
-    cv2.circle(mask_img, (80, 180), 35, 255, -1)              # bottom-left blob
-
+    cv2.rectangle(mask_img, (50, 30), (270, 130), 255, -1)
+    cv2.circle(mask_img, (80, 180), 35, 255, -1)
     mask_path = os.path.join(MASK_DIR, "test3_mask.png")
     cv2.imwrite(mask_path, mask_img)
-
     return run_test("test3_mask_file", img, mask_path)
 
 
 def test_full_frame_mask():
-    """Edge case: entire image is dynamic → output should be all-black."""
     img = make_image(seed=4)
     h, w = img.shape[:2]
     return run_test("test4_full_frame", img, f"0,0,{w},{h}")
@@ -150,23 +164,40 @@ def main():
     print("Ghost-Free SLAM — Masking Tests")
     print("=" * 60)
 
-    results = [
+    outcomes = [
         test_single_bbox(),
         test_multi_bbox(),
         test_mask_file(),
         test_full_frame_mask(),
     ]
 
-    passed = sum(results)
-    total  = len(results)
+    passed      = sum(r[0] for r in outcomes)
+    all_metrics = [r[1] for r in outcomes]
+    total       = len(outcomes)
+
+    # ── write CSV report ─────────────────────────────────────────────────────
+    csv_path = os.path.join(OUT_DIR, "report.csv")
+    fieldnames = ["test", "pixels_total", "pixels_masked", "pct_masked",
+                  "mae", "mse", "mean_diff_masked"]
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(all_metrics)
+
     print(f"\n{'='*60}")
     print(f"Results: {passed}/{total} passed")
+    print(f"Report  → {csv_path}")
+    print(f"\n{'Test':<28} {'%Masked':>8} {'MAE':>8} {'MSE':>10} {'MeanDiffMasked':>16}")
+    print("-" * 72)
+    for m in all_metrics:
+        print(f"{m['test']:<28} {m['pct_masked']:>7.1f}% "
+              f"{m['mae']:>8.2f} {m['mse']:>10.2f} {m['mean_diff_masked']:>16.2f}")
 
-    if passed == total:
-        print("All tests PASSED. Output comparisons in masking/test_results/")
-    else:
-        print("Some tests FAILED — see details above.")
+    if passed < total:
+        print("\nSome tests FAILED — see details above.")
         sys.exit(1)
+    else:
+        print("\nAll tests PASSED.")
 
 
 if __name__ == "__main__":
