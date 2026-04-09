@@ -1,0 +1,34 @@
+MASKING QUALITY VALIDATION REPORT
+==================================================
+
+[sitting_xyz]
+  Total frames          : 1261
+  Frames with mask      : 1261
+  Missed (no mask saved): 0 (0.0%)
+  Over-mask cases       : 29 (2.3%)
+  Partial-mask cases    : 122 (9.7%)
+  Average masked area   : 19.56%
+
+[walking_static]
+  Total frames          : 743
+  Frames with mask      : 628
+  Missed (no mask saved): 115 (15.5%)
+  Over-mask cases       : 64 (10.2%)
+  Partial-mask cases    : 67 (10.7%)
+  Average masked area   : 18.73%
+
+[walking_xyz]
+  Total frames          : 859
+  Frames with mask      : 733
+  Missed (no mask saved): 126 (14.7%)
+  Over-mask cases       : 18 (2.5%)
+  Partial-mask cases    : 35 (4.8%)
+  Average masked area   : 18.90%
+
+==================================================
+OVERALL TOTALS
+  Total frames              : 2863
+  Frames with mask saved    : 2622 (91.6%)
+  Missed detections (total) : 241 (8.4%)
+  Over-mask cases           : 111 (4.2% of masked)
+  Partial-mask cases        : 224 (8.5% of masked)
