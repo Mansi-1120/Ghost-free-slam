@@ -7,7 +7,7 @@ from ultralytics import YOLO
 def run_segmentation():
     base_dir = os.getcwd()
     dataset_root = "/projectnb/cs585/projects/dynamic_slam/dataset/tum_rgbd"
-    output_root = os.path.join(base_dir, "segmentation/masks")
+    output_root = os.path.join(base_dir, "masking/masks")
     
     # each of these should correspond to one section of the dataset
     sequences = [
