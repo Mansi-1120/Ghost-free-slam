@@ -11,7 +11,8 @@ def evaluate_metrics():
         "rgbd_dataset_freiburg3_walking_xyz"
     ]
 
-    # ground truth 2 bc each frame in this set should have 2 people
+    # this needs to be modified:
+    # "ground truth 2 bc each frame in this set should have 2 people" is an incorrect assumption
     GROUND_TRUTH_COUNT = 2
 
     for seq in sequences:
