@@ -4,6 +4,7 @@
 
 # steps to create conda environment and download these dependencies (done on macbook pro m4 chip)
 # 1. download conda if not already installed
+# - module load miniconda
 # terminal setup:
 # 2. conda create --name name_here -y
 # 3. conda activate name_here

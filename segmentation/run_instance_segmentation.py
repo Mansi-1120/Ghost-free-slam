@@ -1,14 +1,21 @@
 import os
 import cv2
 import torch
+import numpy as np
+import shutil
 from ultralytics import YOLO
 
 # this script assumes that it is run from the DYNAMIC_SLAM directory on the SCC
 def run_segmentation():
-    base_dir = os.getcwd()
     dataset_root = "/projectnb/cs585/projects/dynamic_slam/dataset/tum_rgbd"
-    output_root = os.path.join(base_dir, "masking/masks")
+    output_root = "/projectnb/cs585/students/dhchi/course_proj_local/masking/masks"
     
+    # clear existing masks
+    if os.path.exists(output_root):
+        shutil.rmtree(output_root)
+        print("Cleared old masks.")
+    os.makedirs(output_root)
+
     # each of these should correspond to one section of the dataset
     sequences = [
         "rgbd_dataset_freiburg3_sitting_xyz",
@@ -48,7 +55,7 @@ def run_segmentation():
                 continue
 
             # YOLO detection
-            results = model.predict(img_path, conf=0.3, verbose=False, classes=[0])
+            results = model.predict(img_path, conf=0.22, verbose=False, classes=[0])
             
             if results[0].masks is not None:
                 # masks and bounding box gen
@@ -58,9 +65,13 @@ def run_segmentation():
                 for i in range(len(masks)):
                     mask_np = masks[i].cpu().numpy()
                     mask_resized = cv2.resize(mask_np, (img.shape[1], img.shape[0]))
+
+                    # after mask_resized = cv2.resize(...)
+                    kernel = np.ones((10, 10), np.uint8)  # 20x20 pixel expansion — tune this
+                    mask_dilated = cv2.dilate((mask_resized > 0.40).astype(np.uint8), kernel, iterations=2)
                     
-                    # delete people
-                    img[mask_resized > 0.5] = [0, 0, 0]
+                    # apply mask
+                    img[mask_dilated > 0] = [0, 0, 0]
                     
                     # label the people detected using tha bounding boxes
                     x1, y1, x2, y2 = map(int, boxes[i].cpu().numpy())
