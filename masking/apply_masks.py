@@ -58,7 +58,7 @@ def apply_clean_mask(orig: np.ndarray, masked_annot: np.ndarray) -> np.ndarray:
     """
     orig_black    = np.all(orig         == 0, axis=2)
     annot_black   = np.all(masked_annot == 0, axis=2)
-    person_mask   = annot_black & ~orig_black          # newly zeroed pixels
+    person_mask   = annot_black & ~orig_black 
     result        = orig.copy()
     result[person_mask] = 0
     return result
@@ -85,10 +85,12 @@ def save_example_strip(orig: np.ndarray, result: np.ndarray,
 
 
 def process_sequence(seq: str) -> dict:
-    orig_seq = os.path.join(DATASET_ROOT, seq)
-    mask_seq = os.path.join(MASK_SRC, seq)
-    out_seq  = os.path.join(OUT_ROOT,  seq)
-    os.makedirs(out_seq, exist_ok=True)
+    orig_seq  = os.path.join(DATASET_ROOT, seq)
+    mask_seq  = os.path.join(MASK_SRC, seq)
+    out_rgb   = os.path.join(OUT_ROOT, seq, "rgb")
+    out_depth = os.path.join(OUT_ROOT, seq, "depth")
+    os.makedirs(out_rgb,   exist_ok=True)
+    os.makedirs(out_depth, exist_ok=True)
 
     rgb_pairs  = load_rgb_list(orig_seq)
     mask_files = set(os.listdir(mask_seq))
@@ -97,12 +99,13 @@ def process_sequence(seq: str) -> dict:
     example_indices = set(
         int(i) for i in np.linspace(0, len(rgb_pairs) - 1, N_EXAMPLES)
     )
-    examples = []  # (orig, result, ts, was_missed)
+    examples = []
 
+    # --- RGB masked frames ---
     for idx, (ts, rel_path) in enumerate(rgb_pairs):
         n_total += 1
         orig_path = os.path.join(orig_seq, rel_path)
-        out_path  = os.path.join(out_seq, f"{ts}.png")
+        out_path  = os.path.join(out_rgb, f"{ts}.png")
 
         orig = cv2.imread(orig_path)
         if orig is None:
@@ -123,12 +126,23 @@ def process_sequence(seq: str) -> dict:
         else:
             result     = orig.copy()
             was_missed = True
-            n_missed  += 1
+            n_missed   += 1
 
         cv2.imwrite(out_path, result)
 
         if idx in example_indices:
             examples.append((orig.copy(), result.copy(), ts, was_missed))
+
+    # --- Copy depth frames ---
+    depth_src = os.path.join(orig_seq, "depth")
+    print(f"  Copying depth frames from {depth_src} ...")
+    for depth_file in os.listdir(depth_src):
+        if depth_file.endswith(".png"):
+            shutil.copy2(
+                os.path.join(depth_src, depth_file),
+                os.path.join(out_depth, depth_file)
+            )
+    print(f"  Depth frames copied to {out_depth}")
 
     return {
         "seq": seq, "total": n_total,
