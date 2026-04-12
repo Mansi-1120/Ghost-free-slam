@@ -206,5 +206,9 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# data folders (tracked via Git LFS instead)*.e[0-9]*
+# data folders (tracked via Git LFS instead)
+*.e[0-9]*
 *.o[0-9]*
+masked_input/
+logs/
+trajectories/
