@@ -143,7 +143,7 @@ def make_comparison(orig: np.ndarray, masked: np.ndarray,
 
     fig.canvas.draw()
     w, h = fig.canvas.get_width_height()
-    img_arr = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(h, w, 3)
+    img_arr = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8).reshape(h, w, 4)[:, :, :3]
     plt.close(fig)
     return img_arr
 
@@ -293,8 +293,8 @@ def validate_sequence(seq: str, summary_lines: list):
             plt.tight_layout()
             fig.canvas.draw()
             w, h = fig.canvas.get_width_height()
-            img_arr = np.frombuffer(fig.canvas.tostring_rgb(),
-                                    dtype=np.uint8).reshape(h, w, 3)
+            img_arr = np.frombuffer(fig.canvas.buffer_rgba(),
+                                    dtype=np.uint8).reshape(h, w, 4)[:, :, :3]
             plt.close(fig)
             miss_imgs.append(img_arr)
 
