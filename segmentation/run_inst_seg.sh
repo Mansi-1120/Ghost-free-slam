@@ -8,7 +8,7 @@
 
 # assumes you have loaded into a conda environment and installed the required dependnecies
 # conda env named "yolo"
-source activate yolo
+# source activate yolo --> I ended up not using this env anymore
 
 # run the script
 python segmentation/run_instance_segmentation.py

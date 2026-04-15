@@ -8,7 +8,7 @@ from ultralytics import YOLO
 # this script assumes that it is run from the DYNAMIC_SLAM directory on the SCC
 def run_segmentation():
     dataset_root = "/projectnb/cs585/projects/dynamic_slam/dataset/tum_rgbd"
-    output_root = "/projectnb/cs585/students/dhchi/course_proj_local/masking/masks"
+    output_root = "/projectnb/cs585/students/dhchi/course_proj/Ghost-free-slam/masking/masks"
     
     # clear existing masks
     if os.path.exists(output_root):
@@ -26,7 +26,7 @@ def run_segmentation():
     # here we initialize the model and set to GPU if available
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
-    model = YOLO("yolo26n-seg.pt").to(device)
+    model = YOLO("yolo26m-seg.pt").to(device)
 
     for seq in sequences:
         seq_path = os.path.join(dataset_root, seq)
@@ -55,29 +55,24 @@ def run_segmentation():
                 continue
 
             # YOLO detection
-            results = model.predict(img_path, conf=0.22, verbose=False, classes=[0])
+            results = model.predict(img_path, conf=0.22, iou=0.4, verbose=False, classes=[0])
             
             if results[0].masks is not None:
                 # masks and bounding box gen
                 masks = results[0].masks.data
                 boxes = results[0].boxes.xyxy
+                kernel = np.ones((10, 10), np.uint8)  # 20x20 pixel expansion — tune this
                 
                 for i in range(len(masks)):
                     mask_np = masks[i].cpu().numpy()
                     mask_resized = cv2.resize(mask_np, (img.shape[1], img.shape[0]))
 
                     # after mask_resized = cv2.resize(...)
-                    kernel = np.ones((10, 10), np.uint8)  # 20x20 pixel expansion — tune this
                     mask_dilated = cv2.dilate((mask_resized > 0.40).astype(np.uint8), kernel, iterations=2)
-                    
+                    mask_smooth = cv2.GaussianBlur(mask_dilated.astype(np.float32), (21, 21), 0)
+
                     # apply mask
-                    img[mask_dilated > 0] = [0, 0, 0]
-                    
-                    # label the people detected using tha bounding boxes
-                    x1, y1, x2, y2 = map(int, boxes[i].cpu().numpy())
-                    label = f"Person {i+1}"
-                    cv2.putText(img, label, (x1, max(y1 - 10, 20)), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                    img[mask_smooth > 0.3] = [0, 0, 0]
                 
                 # save imgs to dir
                 mask_filename = f"{timestamp}.png"

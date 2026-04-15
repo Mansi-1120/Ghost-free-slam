@@ -13,7 +13,6 @@ Also saves example comparison strips to masking/masked_frames/examples/.
 """
 
 import os
-import shutil
 import cv2
 import numpy as np
 import matplotlib
@@ -51,15 +50,15 @@ def load_rgb_list(seq_path: str) -> list[tuple[str, str]]:
     return pairs
 
 
-def apply_clean_mask(orig: np.ndarray, masked_annot: np.ndarray) -> np.ndarray:
+def apply_clean_mask(orig: np.ndarray, mask: np.ndarray) -> np.ndarray:
     """
     Derive person mask from annotated masked image and apply cleanly to original.
     Person pixels = black in masked_annot AND non-black in original.
     """
-    orig_black    = np.all(orig         == 0, axis=2)
-    annot_black   = np.all(masked_annot == 0, axis=2)
-    person_mask   = annot_black & ~orig_black 
-    result        = orig.copy()
+    orig_black  = np.all(orig == 0, axis=2)
+    mask_black  = np.all(mask == 0, axis=2)
+    person_mask = mask_black & ~orig_black
+    result      = orig.copy()
     result[person_mask] = 0
     return result
 
@@ -88,9 +87,9 @@ def process_sequence(seq: str) -> dict:
     orig_seq  = os.path.join(DATASET_ROOT, seq)
     mask_seq  = os.path.join(MASK_SRC, seq)
     out_rgb   = os.path.join(OUT_ROOT, seq, "rgb")
-    out_depth = os.path.join(OUT_ROOT, seq, "depth")
+    # out_depth = os.path.join(OUT_ROOT, seq, "depth") #uncomment if need to re copy depth folders
     os.makedirs(out_rgb,   exist_ok=True)
-    os.makedirs(out_depth, exist_ok=True)
+    # os.makedirs(out_depth, exist_ok=True) #uncomment if need to re copy depth folders
 
     rgb_pairs  = load_rgb_list(orig_seq)
     mask_files = set(os.listdir(mask_seq))
@@ -133,16 +132,17 @@ def process_sequence(seq: str) -> dict:
         if idx in example_indices:
             examples.append((orig.copy(), result.copy(), ts, was_missed))
 
-    # --- Copy depth frames ---
-    depth_src = os.path.join(orig_seq, "depth")
-    print(f"  Copying depth frames from {depth_src} ...")
-    for depth_file in os.listdir(depth_src):
-        if depth_file.endswith(".png"):
-            shutil.copy2(
-                os.path.join(depth_src, depth_file),
-                os.path.join(out_depth, depth_file)
-            )
-    print(f"  Depth frames copied to {out_depth}")
+    # UNCOMMENT CHUNK IF RE-COPYING DEPTH FRAMES
+    # # --- Copy depth frames ---
+    # depth_src = os.path.join(orig_seq, "depth")
+    # print(f"  Copying depth frames from {depth_src} ...")
+    # for depth_file in os.listdir(depth_src):
+    #     if depth_file.endswith(".png"):
+    #         shutil.copy2(
+    #             os.path.join(depth_src, depth_file),
+    #             os.path.join(out_depth, depth_file)
+    #         )
+    # print(f"  Depth frames copied to {out_depth}")
 
     return {
         "seq": seq, "total": n_total,
