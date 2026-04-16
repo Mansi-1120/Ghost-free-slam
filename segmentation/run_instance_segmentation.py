@@ -61,14 +61,14 @@ def run_segmentation():
                 # masks and bounding box gen
                 masks = results[0].masks.data
                 boxes = results[0].boxes.xyxy
-                kernel = np.ones((10, 10), np.uint8)  # 20x20 pixel expansion — tune this
+                kernel = np.ones((4, 4), np.uint8)  # 4x4 pixel expansion
                 
                 for i in range(len(masks)):
                     mask_np = masks[i].cpu().numpy()
                     mask_resized = cv2.resize(mask_np, (img.shape[1], img.shape[0]))
 
                     # after mask_resized = cv2.resize(...)
-                    mask_dilated = cv2.dilate((mask_resized > 0.40).astype(np.uint8), kernel, iterations=2)
+                    mask_dilated = cv2.dilate((mask_resized > 0.30).astype(np.uint8), kernel, iterations=1)
                     mask_smooth = cv2.GaussianBlur(mask_dilated.astype(np.float32), (21, 21), 0)
 
                     # apply mask

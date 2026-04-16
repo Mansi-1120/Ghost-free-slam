@@ -6,9 +6,9 @@
 #$-l gpus=1       # req 1 GPU
 #$-l gpu_c=7.5   # GPU capability (optional)
 
-# assumes you have loaded into a conda environment and installed the required dependnecies
-# conda env named "yolo"
-# source activate yolo --> I ended up not using this env anymore
+module load python3/3.10.12
+
+export PYTHONPATH=$HOME/.local/lib/python3.10/site-packages:$PYTHONPATH
 
 # run the script
 python segmentation/run_instance_segmentation.py
