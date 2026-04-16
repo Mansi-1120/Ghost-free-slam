@@ -1,5 +1,0 @@
-Baseline ATE (RMSE):
-
-setting_xyz: 0.015743
-walking_static: 0.033973
-walking_xyz: 0.358799
