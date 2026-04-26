@@ -213,3 +213,5 @@ masked_input/
 logs/
 trajectories/
 
+reprojection/recovered_frames/
+reprojection/debug_*

@@ -39,11 +39,8 @@ def parse_trajectory(traj_path):
             ts = parts[0]
             tx, ty, tz = float(parts[1]), float(parts[2]), float(parts[3])
             qx, qy, qz, qw = float(parts[4]), float(parts[5]), float(parts[6]), float(parts[7])
-
-            # Quaternion to rotation matrix
             R = quat_to_rot(qx, qy, qz, qw)
 
-            # Build 4x4 pose matrix (world-to-camera transform)
             T = np.eye(4)
             T[:3, :3] = R
             T[:3, 3] = [tx, ty, tz]
@@ -137,12 +134,22 @@ def reproject_frame(prev_rgb, prev_depth, curr_masked, prev_pose, curr_pose):
     fill_src_v = src_v[is_masked]
     fill_src_u = src_u[is_masked]
 
-    for i in range(len(fill_u)):
-        pu, pv = fill_u[i], fill_v[i]
-        if fill_z[i] < z_buf[pv, pu]:
-            z_buf[pv, pu] = fill_z[i]
-            recovered[pv, pu] = prev_rgb[fill_src_v[i], fill_src_u[i]]
+    fill_u = u_proj[is_masked]
+    fill_v = v_proj[is_masked]
+    fill_z = z_curr[in_bounds][is_masked]
+    fill_src_v = src_v[is_masked]
+    fill_src_u = src_u[is_masked]
 
+    if len(fill_u) == 0:
+        return recovered
+
+    order = np.argsort(-fill_z)
+    fill_u = fill_u[order]
+    fill_v = fill_v[order]
+    fill_src_u = fill_src_u[order]
+    fill_src_v = fill_src_v[order]
+
+    recovered[fill_v, fill_u] = prev_rgb[fill_src_v, fill_src_u]
     return recovered
 
 
@@ -232,8 +239,7 @@ def process_sequence(repo_root, sequence_name, max_time_diff=0.05):
         if has_mask and i > 0:
 
             recovered = curr_masked.copy()
-            lookback_offsets = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50]
-
+            lookback_offsets = [1, 2, 3, 5, 8, 10]
             for offset in lookback_offsets:
                 src_idx = i - offset
                 if src_idx < 0:
