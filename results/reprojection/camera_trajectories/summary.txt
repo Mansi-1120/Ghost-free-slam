@@ -1,0 +1,5 @@
+ATE (RMSE):
+
+sitting_xyz: 0.026183
+walking_static: 0.010109
+walking_xyz: 0.028245
