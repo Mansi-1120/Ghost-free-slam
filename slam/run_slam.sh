@@ -9,55 +9,53 @@ BASE_PATH=/projectnb/cs585/projects/dynamic_slam
 SLAM_PATH=$BASE_PATH/ORB_SLAM3/Examples/RGB-D
 
 DATASET=$1
-MODE=$2   # baseline OR masked
+MODE=$2   # baseline OR masked OR reprojection
 
-
-# DATASET PATH
+#DATASET NAME
 
 if [ "$DATASET" == "sitting_xyz" ]; then
-    NAME=rgbd_dataset_freiburg3_sitting_xyz
+NAME=rgbd_dataset_freiburg3_sitting_xyz
 elif [ "$DATASET" == "walking_static" ]; then
-    NAME=rgbd_dataset_freiburg3_walking_static
+NAME=rgbd_dataset_freiburg3_walking_static
 elif [ "$DATASET" == "walking_xyz" ]; then
-    NAME=rgbd_dataset_freiburg3_walking_xyz
+NAME=rgbd_dataset_freiburg3_walking_xyz
 else
-    echo "Invalid dataset"
-    exit 1
+echo "Invalid dataset"
+exit 1
 fi
 
-# MODE (baseline vs masked)
+#MODE PATH SELECTION
 
 if [ "$MODE" == "baseline" ]; then
-    DATA_PATH=$BASE_PATH/dataset/tum_rgbd/$NAME
+DATA_PATH=$BASE_PATH/dataset/tum_rgbd/$NAME
+
 elif [ "$MODE" == "masked" ]; then
-    DATA_PATH=$BASE_PATH/Ghost-free-slam/masking/masked_frames/$NAME
+DATA_PATH=$BASE_PATH/Ghost-free-slam/masking/masked_frames/$NAME
+
+elif [ "$MODE" == "reprojection" ]; then
+DATA_PATH=$BASE_PATH/Ghost-free-slam/reprojection/recovered_frames/$NAME
+
 else
-    echo "Invalid mode"
-    echo "Use: baseline OR masked"
-    exit 1
+echo "Invalid mode"
+echo "Use: baseline OR masked OR reprojection"
+exit 1
 fi
 
-
-# ASSOCIATION FILE CHECK
-
+#ASSOCIATION FILE
 
 if [ ! -f "$DATA_PATH/associations.txt" ]; then
-    echo "Creating associations.txt..."
-    cd $DATA_PATH
-    python $BASE_PATH/ORB_SLAM3/Examples/RGB-D/associate.py rgb.txt depth.txt > associations.txt
+echo "Creating associations.txt..."
+cd $DATA_PATH
+python $BASE_PATH/ORB_SLAM3/Examples/RGB-D/associate.py rgb.txt depth.txt > associations.txt
 fi
 
-
-# RUN SLAM
-
+#RUN SLAM
 
 cd $SLAM_PATH
 
 ./rgbd_tum ../../Vocabulary/ORBvoc.txt TUM1.yaml $DATA_PATH $DATA_PATH/associations.txt
 
-
-# SAVE OUTPUTS (IMPORTANT PART)
-
+#SAVE TRAJECTORIES
 
 CAM_DIR=$BASE_PATH/trajectories/$MODE/camera_trajectories
 KEY_DIR=$BASE_PATH/trajectories/$MODE/keyframe_trajectories
@@ -65,7 +63,7 @@ KEY_DIR=$BASE_PATH/trajectories/$MODE/keyframe_trajectories
 mkdir -p $CAM_DIR
 mkdir -p $KEY_DIR
 
-mv CameraTrajectory.txt $CAM_DIR/${MODE}_camera_${DATASET}.txt
-mv KeyFrameTrajectory.txt $KEY_DIR/${MODE}_keyframe_${DATASET}.txt
+mv CameraTrajectory.txt $CAM_DIR/${MODE}camera${DATASET}.txt
+mv KeyFrameTrajectory.txt $KEY_DIR/${MODE}keyframe${DATASET}.txt
 
 echo "Saved camera + keyframe for $DATASET ($MODE)"
