@@ -9,6 +9,24 @@ The project started as a CS585 (Computer Vision) team project at Boston Universi
 
 ---
 
+## 🧩 Problem statement
+
+**The problem.** Feature-based visual SLAM systems such as ORB-SLAM3 estimate the camera pose by matching features across frames. They assume that almost all of those features belong to static scene structure. In a crowded indoor scene this assumption breaks: people walking through the view create features that move on their own, independent of the camera. ORB-SLAM3 treats these features as static, so they corrupt data association, get inserted into the map, and make the estimated trajectory drift. On the TUM `walking_xyz` sequence, where two people walk through the scene, the baseline camera ATE is 0.3412 m. On `sitting_xyz`, where the people barely move, it is 0.0151 m.
+
+**Research question.**
+
+> Does segmentation-based dynamic removal, combined with minimal geometric reprojection, reduce trajectory drift in crowded indoor RGB-D sequences?
+
+**What we do.** ORB-SLAM3 itself stays unchanged. We only change the images it receives:
+
+1. **Remove moving people** before feature extraction, using YOLO26 instance segmentation to mask person pixels in every RGB frame.
+2. **Recover the static background** hidden behind the masked people, using depth-consistent reprojection from earlier frames, and only where that background was actually observed before.
+3. **Measure the effect** by running three configurations (baseline, masking only, masking + reprojection) on the same three TUM RGB-D sequences and comparing the Absolute Trajectory Error (ATE) of both camera and keyframe trajectories.
+
+**Scope.** This is a controlled empirical study, not a new SLAM algorithm. There is no learned inpainting, no dynamic object tracking, and no change to bundle adjustment or any other part of the SLAM backend.
+
+---
+
 ## 📌 Headline result
 
 On `freiburg3_walking_xyz` (two people walking through the scene while the camera moves), masking dynamic pixels cuts ORB-SLAM3's camera-trajectory Absolute Trajectory Error from **0.3412 m to 0.0266 m**, a **92.2%** reduction. On `walking_static` the drop is 79.7% (0.0517 m to 0.0105 m). On `sitting_xyz`, where people barely move, masking makes things worse (0.0151 m to 0.0289 m).
