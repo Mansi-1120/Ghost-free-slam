@@ -11,7 +11,7 @@ The project started as a CS585 (Computer Vision) team project at Boston Universi
 
 ## 📌 Headline result
 
-On `freiburg3_walking_xyz` (two people walking through the scene while the camera moves), masking dynamic pixels cuts ORB-SLAM3's Absolute Trajectory Error from **0.341 m to 0.027 m RMSE**, roughly a 12x reduction. On the two easier sequences the effect is much smaller, and on `sitting_xyz` masking makes things slightly worse.
+On `freiburg3_walking_xyz` (two people walking through the scene while the camera moves), masking dynamic pixels cuts ORB-SLAM3's camera-trajectory Absolute Trajectory Error from **0.3412 m to 0.0266 m**, a **92.2%** reduction. On `walking_static` the drop is 79.7% (0.0517 m to 0.0105 m). On `sitting_xyz`, where people barely move, masking makes things worse (0.0151 m to 0.0289 m).
 
 <table>
   <tr>
@@ -34,26 +34,27 @@ Trajectory maps for both runs are in `results/baseline/camera_trajectories/walki
 
 ## 📊 Full results
 
-ATE RMSE (metres) of the **camera trajectory** against TUM ground truth, SE(3) Umeyama alignment, computed with `evo_ape tum <gt> <traj> -a`. All numbers below were regenerated from the trajectory files in `trajectories/` so they can be reproduced from this repo alone.
+Absolute Trajectory Error (ATE RMSE, metres) against TUM ground truth after SE(3) alignment, computed with `evo_ape tum <groundtruth> <trajectory> -va`. Both the camera trajectory (a pose for every frame) and the keyframe trajectory (the frames ORB-SLAM3 keeps for mapping and bundle adjustment) are evaluated. This is Table 1 of our final report, and every number can be reproduced from the files in `trajectories/`.
 
-| Sequence | Frames | Baseline ORB-SLAM3 | Masking only | Masking + reprojection |
-|---|---:|---:|---:|---:|
-| `freiburg3_sitting_xyz` | 1261 | **0.015** | 0.029 | 0.026 |
-| `freiburg3_walking_static` | 743 | 0.052 | 0.010 | **0.010** |
-| `freiburg3_walking_xyz` | 859 | 0.341 | **0.027** | 0.028 |
-
-All three runs track every sequence end to end (1230 / 723 / 833 poses respectively, same count in every configuration), so the differences are drift, not tracking loss.
+| Sequence | Baseline camera | Baseline keyframe | Masked camera | Masked keyframe | Reprojection camera | Reprojection keyframe |
+|---|---:|---:|---:|---:|---:|---:|
+| `sitting_xyz` | **0.0151** | **0.0191** | 0.0289 | 0.0327 | 0.0262 | 0.0322 |
+| `walking_static` | 0.0517 | 0.0259 | 0.0105 | 0.0090 | **0.0101** | **0.0077** |
+| `walking_xyz` | 0.3412 | 0.3283 | **0.0266** | **0.0280** | 0.0282 | 0.0328 |
 
 What the table shows:
 
-* **Masking is where the gain comes from.** On the two walking sequences, removing person pixels before ORB extraction is the difference between a usable and an unusable trajectory.
-* **Reprojection did not add anything measurable on top of masking.** The numbers are within noise of the masking-only run (0.028 vs 0.027 on walking_xyz). The recovered pixels are copied from the previous frame using the masked-run poses, so they mostly reintroduce texture that ORB-SLAM3 already had a matching keyframe for. See [Geometric recovery](#-geometric-recovery-reprojection) for why.
-* **On `sitting_xyz` masking hurts a little.** The people barely move, so their features are actually usable static structure. Masking them removes about 22% of every frame (see the masking report below) for no benefit.
-* **We do not match DynaSLAM.** DynaSLAM (Bescos et al., 2018) reports 0.015 m on walking_xyz using Mask R-CNN plus multi-view geometry and background inpainting. Our 0.027 m sits between the raw ORB-SLAM3 baseline and that number. Closing this gap is the point of the follow-up work.
+* **Masking is where the gain comes from.** Removing person pixels before ORB feature extraction cuts camera ATE by 92.2% on `walking_xyz` and 79.7% on `walking_static`.
+* **Masking hurts in a mostly static scene.** In `sitting_xyz` the people barely move, so masking them removes useful background features and camera ATE rises from 0.0151 m to 0.0289 m.
+* **Reprojection gives limited extra benefit.** The best case is `walking_static`, where keyframe ATE improves from 0.0090 m to 0.0077 m (about 14%). On `walking_xyz` it is slightly worse than masking alone, because only a small fraction of the masked pixels get recovered. On `sitting_xyz` the change is negligible.
+* **Keyframe vs camera.** Keyframe trajectories usually have lower or similar error, since bundle adjustment smooths out some of the leftover noise after masking.
+* **We do not match DynaSLAM yet.** DynaSLAM (Bescos et al., 2018) reports 0.015 m on `walking_xyz`, using Mask R-CNN plus multi-view geometry and background inpainting. Our 0.0266 m sits between the raw ORB-SLAM3 baseline and that number. Closing this gap is the point of the follow-up work.
+
+All three configurations track every sequence end to end (1230 / 723 / 833 camera poses, the same count in every configuration), so the differences come from drift, not from lost tracking.
 
 All SLAM plots live in `results/`. Map and raw evo plots for every configuration are in `results/<mode>/camera_trajectories/<sequence>/` and `results/<mode>/keyframe_trajectories/<sequence>/`.
 
-Note on the baseline numbers: the baseline plots and `results/baseline/camera_trajectories/summary.txt` come from an earlier baseline run (walking_xyz 0.359 m, walking_static 0.034 m, sitting_xyz 0.016 m). The table above uses the baseline trajectory files committed in `trajectories/baseline/`, which give 0.341 / 0.052 / 0.015 m.
+Note on the baseline numbers: the baseline plots and `results/baseline/camera_trajectories/summary.txt` come from an earlier baseline run (walking_xyz 0.359 m, walking_static 0.034 m, sitting_xyz 0.016 m). The table above uses the baseline trajectory files committed in `trajectories/baseline/`, which give 0.3412 / 0.0517 / 0.0151 m, the same as the report.
 
 ---
 
@@ -72,8 +73,8 @@ Clean binary mask + masked RGB frames (depth untouched)     masking/apply_masks.
         ├──────────────────────────────────────────────┐
         ▼                                              ▼
 ORB-SLAM3 RGB-D, headless, "masked" mode      reprojection/reproject.py
-        │                                     fills masked pixels from the previous
-        │                                     frame using masked-run poses + depth
+        │                                     fills masked pixels from earlier frames
+        │                                     using masked-run poses + depth
         │                                              │
         │                                              ▼
         │                              ORB-SLAM3 RGB-D, "reprojection" mode
@@ -109,18 +110,21 @@ The validation script flags three failure types per frame: missed detection (no 
 | walking_xyz | 859 | 776 | 83 (9.7%) | 132 (17.0%) | 19 (2.4%) | 19.8% |
 | **Overall** | **2863** | **2735 (95.5%)** | **128 (4.5%)** | **272** | **88** | |
 
-"Missed" here means no mask file was saved for that frame. Looking at the flagged frames in `evaluation/validation_report/rgbd_dataset_freiburg3_walking_xyz/failures_missed_detection.png`, many of them are moments where both people have walked out of view, so the true miss rate is lower than 9.7%. The real misses are motion-blurred people half outside the image border. Those frames go into SLAM unmasked, which is one reason we still trail DynaSLAM. Comparison grids and flagged failure frames for every sequence are in `evaluation/validation_report/<sequence>/`.
+Across all sequences, 95.5% of frames are masked (2735 of 2863), with 128 missed detections. Over-masking happens in 9.9% of masked frames and partial masking in 3.2%. Over-masking does less harm to SLAM than under-masking: it removes some extra static features, but it does not let moving pixels into the map. Missed and partial masks grow with scene dynamics, since motion blur and occlusion in `walking_xyz` make people harder to segment, and those leftover dynamic regions are one reason we still trail DynaSLAM. Comparison grids and flagged failure frames for every sequence are in `evaluation/validation_report/<sequence>/`.
 
 ### 🧠 Geometric recovery (reprojection)
 
-`reprojection/reproject.py` tries to give ORB-SLAM3 back the static texture hiding behind a masked person:
+Masking removes moving people, but it also throws away the static background behind them. Reprojection tries to give ORB-SLAM3 that background back using RGB-D geometry:
 
 1. Take the camera poses from the **masked** ORB-SLAM3 run (`trajectories/masked/camera_trajectories/`).
-2. For each frame, back-project the previous frame's depth into 3D, transform it into the current frame with the relative pose, and project it back to pixels.
-3. Wherever a projected point lands on a masked (black) pixel, copy the previous frame's RGB value there. Depth is checked to be in `[0.1 m, 10 m]`; nothing is invented for pixels with no valid source.
-4. Write the recovered frames to `reprojection/recovered_frames/<sequence>/` and run ORB-SLAM3 in `reprojection` mode on them.
+2. Back-project each valid depth pixel of an earlier frame into 3D using the camera intrinsics, transform it into the current frame with the estimated poses, and project it into the masked region.
+3. Use several earlier frames, at offsets of 1, 2, 3, 5, 8 and 10 frames, to see the background from more viewpoints. When several points land on the same pixel, a depth z-buffer keeps the closest one.
+4. Only depth-consistent points are kept. Regions never seen before are left masked, so no geometry is invented.
+5. Write the recovered frames to `reprojection/recovered_frames/<sequence>/` and run ORB-SLAM3 in `reprojection` mode on them.
 
-Only the immediately previous frame is used as the source, so a region that was occluded in both frames stays black. That is the main reason the reprojection numbers match the masking-only numbers: a one-frame lookback recovers texture that the tracker already observed one frame earlier, and the pixels behind a person who has been standing in the same spot for many frames are never recovered. A multi-frame lookback (offsets 1, 2, 3, 5, 8, 10) was tried in April (see git history of `reproject.py`); the committed version went back to a single previous frame.
+Recovery grows with camera motion. In `sitting_xyz` only about 5% of masked pixels are recovered, while the walking sequences recover more thanks to larger viewpoint changes. Overall coverage stays small, which is why reprojection adds little on top of masking.
+
+Note on the code: the multi-frame version described above is in commit `f9d6f006` of `reprojection/reproject.py`. The version currently on `main` uses only the single previous frame.
 
 ---
 
@@ -142,7 +146,7 @@ Ghost-Free-SLAM/
 │   └── masked_frames/<sequence>/      # rgb/ (masked) and depth/ (original), fed to ORB-SLAM3
 │
 ├── reprojection/
-│   └── reproject.py                   # previous-frame depth reprojection into masked regions
+│   └── reproject.py                   # depth-based reprojection into masked regions
 │
 ├── slam/
 │   ├── run_slam.sh                    # run ORB-SLAM3 RGB-D: <sequence> <baseline|masked|reprojection>
@@ -257,8 +261,10 @@ Raw sequences are not in this repo. They live at `/projectnb/cs585/projects/dyna
 The CS585 deliverable is done. The RA-L extension, advised by Prof. Andrew Wood, is about the gap to DynaSLAM without paying DynaSLAM's cost:
 
 * Replace the closed-set person masks with **lightweight open-set dynamic object removal**, so anything that moves (not just COCO "person") is filtered, at a runtime that still fits a real-time RGB-D pipeline.
-* Fix the walking frames where segmentation misses a blurred or half-visible person, since those frames are the ones that still leak dynamic features into tracking.
-* Decide whether reprojection earns its place. With a one-frame lookback it does not. Either a multi-frame recovery that fills long-term occlusions, or dropping the stage entirely.
+* **Adaptive masking**: mask only regions that are actually moving, so static scenes like `sitting_xyz` stop losing useful features.
+* **Temporally consistent segmentation**: add tracking or smoothing across frames to cut flickering masks and missed detections in highly dynamic sequences.
+* **Better recovery of occluded background**: multi-frame reprojection recovers only a small share of masked pixels. Dense mapping or learned inpainting could fill more.
+* **Tighter perception and SLAM integration**: bring dynamic-object awareness into the SLAM optimization itself instead of keeping it as a preprocessing step.
 
 ---
 
@@ -266,13 +272,13 @@ The CS585 deliverable is done. The RA-L extension, advised by Prof. Andrew Wood,
 
 | Member | Responsibility |
 |--------|----------------|
-| **Mansi Singh** | ORB-SLAM3 integration, SLAM experiment design, reprojection |
-| **Tianqin Fu** | SLAM experiments and trajectory analysis |
-| **Bhoomika Monthy Rajashekar** | Instance segmentation pipeline |
-| **Devinn Chi** | YOLO model configuration and mask generation |
-| **Brendan Coyne** | Dataset preparation, experiment automation, and visualization |
+| **Mansi Singh** (lead researcher and author) | Depth-consistent geometric reprojection, coordinate transformations, ORB-SLAM3 integration, ATE analysis |
+| **Tianqin Fu** | Depth-consistent geometric reprojection, coordinate transformations, ORB-SLAM3 integration, ATE analysis |
+| **Bhoomika Monthy Rajashekar** | YOLO26 instance segmentation, segmentation evaluation (detection accuracy, over-masking, partial masking) |
+| **Devinn Chi** | YOLO26 instance segmentation, segmentation evaluation (detection accuracy, over-masking, partial masking) |
+| **Brendan Coyne** | Dataset preparation, automated experiment runs, ATE statistics, and visual comparisons across configurations |
 
-Advisor: Prof. Andrew Wood, Boston University.
+Advisor: Andrew Wood, Boston University.
 
 ---
 
@@ -282,6 +288,9 @@ Advisor: Prof. Andrew Wood, Boston University.
 * Mur-Artal and Tardós, 2017. ORB-SLAM2: An Open-Source SLAM System for Monocular, Stereo, and RGB-D Cameras. IEEE T-RO.
 * Bescos et al., 2018. DynaSLAM: Tracking, Mapping and Inpainting in Dynamic Scenes. IEEE RA-L.
 * Yu et al., 2018. DS-SLAM: A Semantic Visual SLAM Towards Dynamic Environments. IROS.
+* Sun et al., 2017. Improving RGB-D SLAM in Dynamic Environments: A Motion Removal Approach. Robotics and Autonomous Systems.
+* Dai et al., 2020. RGB-D SLAM in Dynamic Environments Using Point Correlations. IEEE TPAMI.
+* Engel et al., 2015. Large-Scale Direct SLAM with Stereo Cameras. IROS.
 * Sturm et al., 2012. A Benchmark for the Evaluation of RGB-D SLAM Systems. IROS. (TUM RGB-D dataset)
 * Grupp, 2017. evo: Python package for the evaluation of odometry and SLAM. https://github.com/MichaelGrupp/evo
 
