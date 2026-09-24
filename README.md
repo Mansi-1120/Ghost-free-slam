@@ -19,14 +19,16 @@ On `freiburg3_walking_xyz` (two people walking through the scene while the camer
     <th>Masked ORB-SLAM3 (walking_xyz)</th>
   </tr>
   <tr>
-    <td><img src="results/baseline/camera_trajectories/walking_xyz/plot_map.png" width="420"></td>
-    <td><img src="results/masked/camera_trajectories/walking_xyz/walking_xyz_camera_map.png" width="420"></td>
+    <td><img src="results/baseline/camera_trajectories/walking_xyz/plot_raw.png" width="420"></td>
+    <td><img src="results/masked/camera_trajectories/walking_xyz/walking_xyz_camera_raw.png" width="420"></td>
   </tr>
   <tr>
-    <td>Colour = APE per pose. Max error 0.835 m. The estimated path wanders off the ground-truth "xyz" cross.</td>
-    <td>Colour = APE per pose. Max error 0.071 m. The estimate stays on the ground-truth cross.</td>
+    <td>APE over time. Error swings between 0.2 and 0.8 m for the whole run. Note the y-axis goes to 0.8 m.</td>
+    <td>APE over time. Error stays below 0.071 m for the whole run. Note the y-axis goes to 0.07 m, about 12x smaller.</td>
   </tr>
 </table>
+
+Trajectory maps for both runs are in `results/baseline/camera_trajectories/walking_xyz/plot_map.png` and `results/masked/camera_trajectories/walking_xyz/walking_xyz_camera_map.png`.
 
 ---
 
@@ -42,7 +44,7 @@ ATE RMSE (metres) of the **camera trajectory** against TUM ground truth, SE(3) U
 
 All three runs track every sequence end to end (1230 / 723 / 833 poses respectively, same count in every configuration), so the differences are drift, not tracking loss.
 
-What the table says, honestly:
+What the table shows:
 
 * **Masking is where the gain comes from.** On the two walking sequences, removing person pixels before ORB extraction is the difference between a usable and an unusable trajectory.
 * **Reprojection did not add anything measurable on top of masking.** The numbers are within noise of the masking-only run (0.028 vs 0.027 on walking_xyz). The recovered pixels are copied from the previous frame using the masked-run poses, so they mostly reintroduce texture that ORB-SLAM3 already had a matching keyframe for. See [Geometric recovery](#-geometric-recovery-reprojection) for why.
@@ -50,6 +52,8 @@ What the table says, honestly:
 * **We do not match DynaSLAM.** DynaSLAM (Bescos et al., 2018) reports 0.015 m on walking_xyz using Mask R-CNN plus multi-view geometry and background inpainting. Our 0.027 m sits between the raw ORB-SLAM3 baseline and that number. Closing this gap is the point of the follow-up work.
 
 Per-sequence evo plots (trajectory, xyz, rpy, speed) for the baseline run are in `evaluation/<sequence>/`. Map and raw plots for every configuration are in `results/<mode>/camera_trajectories/<sequence>/` and `results/<mode>/keyframe_trajectories/<sequence>/`.
+
+Note on the baseline numbers: the baseline plots and `results/baseline/camera_trajectories/summary.txt` come from an earlier baseline run (walking_xyz 0.359 m, walking_static 0.034 m, sitting_xyz 0.016 m). The table above uses the baseline trajectory files committed in `trajectories/baseline/`, which give 0.341 / 0.052 / 0.015 m.
 
 ---
 
@@ -155,7 +159,6 @@ Ghost-Free-SLAM/
 │
 ├── requirements.txt/yolo26_requirements.txt
 ├── yolo26m-seg.pt, yolo26n-seg.pt     # segmentation weights
-├── configs/, demos/, docs/, examples/ # placeholders, currently empty
 └── README.md
 ```
 
