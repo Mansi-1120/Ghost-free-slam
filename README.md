@@ -87,8 +87,8 @@ Camera trajectories against ground truth (dashed), taken directly from `results/
   </tr>
   <tr>
     <td><b>Masked</b></td>
-    <td>Pending re-export (see note)</td>
-    <td>Pending re-export (see note)</td>
+    <td><img src="results/masked/camera_trajectories/sitting_xyz/sitting_xyz_camera_map.png" width="260"></td>
+    <td><img src="results/masked/camera_trajectories/walking_static/walking_static_camera_map.png" width="260"></td>
     <td><img src="results/masked/camera_trajectories/walking_xyz/walking_xyz_camera_map.png" width="260"></td>
   </tr>
   <tr>
@@ -102,7 +102,7 @@ Camera trajectories against ground truth (dashed), taken directly from `results/
 Notes on the plots:
 
 * **Baseline plots** are the same images as report Figure 9. They were made from an earlier baseline run (RMSE 0.0157 / 0.0340 / 0.3588 m in their `result.zip`, also in `results/baseline/camera_trajectories/summary.txt`). The table above uses the baseline trajectory files committed in `trajectories/baseline/`, which give 0.0151 / 0.0517 / 0.3412 m, the same as the report's Table 1.
-* **Masked plots for `sitting_xyz` and `walking_static`** (camera and keyframe) and the masked keyframe plot for `walking_xyz` are currently copies of the reprojection plots. Their colour scales match the reprojection trajectories, not the masked ones. The same images appear in report Figure 10. They will be re-exported from `trajectories/masked/`. The masked camera plot for `walking_xyz` is correct.
+* **Masked plots** are the same images as report Figure 10. The masked camera plot for `walking_xyz` matches the masked trajectory. The masked plots for `sitting_xyz` and `walking_static` (camera and keyframe) and the masked keyframe plot for `walking_xyz` are currently the same image files as the reprojection plots, so their colour scales follow the reprojection trajectories. They will be re-exported from `trajectories/masked/`.
 * **Reprojection plots** match the reprojection trajectories and report Figure 11.
 
 ---
