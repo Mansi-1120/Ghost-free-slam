@@ -19,16 +19,14 @@ On `freiburg3_walking_xyz` (two people walking through the scene while the camer
     <th>Masked ORB-SLAM3 (walking_xyz)</th>
   </tr>
   <tr>
-    <td><img src="results/baseline/camera_trajectories/walking_xyz/plot_raw.png" width="420"></td>
-    <td><img src="results/masked/camera_trajectories/walking_xyz/walking_xyz_camera_raw.png" width="420"></td>
+    <td><img src="results/baseline/camera_trajectories/walking_xyz/plot_map.png" width="420"></td>
+    <td><img src="results/masked/camera_trajectories/walking_xyz/walking_xyz_camera_map.png" width="420"></td>
   </tr>
   <tr>
-    <td>APE over time. Error mostly sits between 0.2 and 0.6 m and peaks at 0.83 m. Note the y-axis goes to 0.8 m.</td>
-    <td>APE over time. Error stays below 0.071 m for the whole run. Note the y-axis goes to 0.07 m, about 12x smaller.</td>
+    <td>Camera trajectory vs ground truth (dashed). Colour is APE, up to 0.835 m. The estimate drifts far off the ground-truth path. Same plot as report Figure 9.</td>
+    <td>Camera trajectory vs ground truth (dashed). Colour is APE, up to 0.071 m. The estimate stays on the ground-truth path. Same plot as report Figure 10.</td>
   </tr>
 </table>
-
-Trajectory maps for both runs are in `results/baseline/camera_trajectories/walking_xyz/plot_map.png` and `results/masked/camera_trajectories/walking_xyz/walking_xyz_camera_map.png`.
 
 ---
 
@@ -52,9 +50,42 @@ What the table shows:
 
 All three configurations track every sequence end to end (1230 / 723 / 833 camera poses, the same count in every configuration), so the differences come from drift, not from lost tracking.
 
-All SLAM plots live in `results/`. Map and raw evo plots for every configuration are in `results/<mode>/camera_trajectories/<sequence>/` and `results/<mode>/keyframe_trajectories/<sequence>/`.
+### Result plots
 
-Note on the baseline numbers: the baseline plots and `results/baseline/camera_trajectories/summary.txt` come from an earlier baseline run (walking_xyz 0.359 m, walking_static 0.034 m, sitting_xyz 0.016 m). The table above uses the baseline trajectory files committed in `trajectories/baseline/`, which give 0.3412 / 0.0517 / 0.0151 m, the same as the report.
+Camera trajectories against ground truth (dashed), taken directly from `results/`. Colour is APE per pose. Map (`*_map.png`) and APE-over-time (`*_raw.png`) plots for camera and keyframe trajectories are in `results/<mode>/camera_trajectories/<sequence>/` and `results/<mode>/keyframe_trajectories/<sequence>/`.
+
+<table>
+  <tr>
+    <th></th>
+    <th>sitting_xyz</th>
+    <th>walking_static</th>
+    <th>walking_xyz</th>
+  </tr>
+  <tr>
+    <td><b>Baseline</b></td>
+    <td><img src="results/baseline/camera_trajectories/sitting_xyz/plot_map.png" width="260"></td>
+    <td><img src="results/baseline/camera_trajectories/walking_static/plot_map.png" width="260"></td>
+    <td><img src="results/baseline/camera_trajectories/walking_xyz/plot_map.png" width="260"></td>
+  </tr>
+  <tr>
+    <td><b>Masked</b></td>
+    <td>Pending re-export (see note)</td>
+    <td>Pending re-export (see note)</td>
+    <td><img src="results/masked/camera_trajectories/walking_xyz/walking_xyz_camera_map.png" width="260"></td>
+  </tr>
+  <tr>
+    <td><b>Reprojection</b></td>
+    <td><img src="results/reprojection/camera_trajectories/sitting_xyz/sitting_xyz_camera_map.png" width="260"></td>
+    <td><img src="results/reprojection/camera_trajectories/walking_static/walking_static_camera_map.png" width="260"></td>
+    <td><img src="results/reprojection/camera_trajectories/walking_xyz/walking_xyz_camera_map.png" width="260"></td>
+  </tr>
+</table>
+
+Notes on the plots:
+
+* **Baseline plots** are the same images as report Figure 9. They were made from an earlier baseline run (RMSE 0.0157 / 0.0340 / 0.3588 m in their `result.zip`, also in `results/baseline/camera_trajectories/summary.txt`). The table above uses the baseline trajectory files committed in `trajectories/baseline/`, which give 0.0151 / 0.0517 / 0.3412 m, the same as the report's Table 1.
+* **Masked plots for `sitting_xyz` and `walking_static`** (camera and keyframe) and the masked keyframe plot for `walking_xyz` are currently copies of the reprojection plots. Their colour scales match the reprojection trajectories, not the masked ones. The same images appear in report Figure 10. They will be re-exported from `trajectories/masked/`. The masked camera plot for `walking_xyz` is correct.
+* **Reprojection plots** match the reprojection trajectories and report Figure 11.
 
 ---
 
@@ -124,7 +155,11 @@ Masking removes moving people, but it also throws away the static background beh
 
 Recovery grows with camera motion. In `sitting_xyz` only about 5% of masked pixels are recovered, while the walking sequences recover more thanks to larger viewpoint changes. Overall coverage stays small, which is why reprojection adds little on top of masking.
 
-Note on the code: the multi-frame version described above is in commit `f9d6f006` of `reprojection/reproject.py`. The version currently on `main` uses only the single previous frame.
+**Note on the reprojection code version.** The multi-frame method described above (offsets 1, 2, 3, 5, 8 and 10 with a depth z-buffer) is the one described in the final report, which the report uses for its reprojection results and its recovery-vs-lookback analysis. It was implemented by Tianqin Fu in commit `f9d6f006` (26 April 2026). A later cleanup of `reprojection/reproject.py` (commits `25d31061` and `fabf86ac`, 27 to 28 April) first reduced the offsets to 1, 2, 3, 5, 8 and then simplified the script to use only the single previous frame, and that simplified version is what is on `main` now. To run the multi-frame version as described in the report:
+
+```bash
+git show f9d6f006:reprojection/reproject.py > reprojection/reproject_multiframe.py
+```
 
 ---
 
