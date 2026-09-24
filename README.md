@@ -23,7 +23,7 @@ On `freiburg3_walking_xyz` (two people walking through the scene while the camer
     <td><img src="results/masked/camera_trajectories/walking_xyz/walking_xyz_camera_raw.png" width="420"></td>
   </tr>
   <tr>
-    <td>APE over time. Error swings between 0.2 and 0.8 m for the whole run. Note the y-axis goes to 0.8 m.</td>
+    <td>APE over time. Error mostly sits between 0.2 and 0.6 m and peaks at 0.83 m. Note the y-axis goes to 0.8 m.</td>
     <td>APE over time. Error stays below 0.071 m for the whole run. Note the y-axis goes to 0.07 m, about 12x smaller.</td>
   </tr>
 </table>
