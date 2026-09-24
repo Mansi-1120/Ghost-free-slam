@@ -51,7 +51,7 @@ What the table shows:
 * **On `sitting_xyz` masking hurts a little.** The people barely move, so their features are actually usable static structure. Masking them removes about 22% of every frame (see the masking report below) for no benefit.
 * **We do not match DynaSLAM.** DynaSLAM (Bescos et al., 2018) reports 0.015 m on walking_xyz using Mask R-CNN plus multi-view geometry and background inpainting. Our 0.027 m sits between the raw ORB-SLAM3 baseline and that number. Closing this gap is the point of the follow-up work.
 
-Per-sequence evo plots (trajectory, xyz, rpy, speed) for the baseline run are in `evaluation/<sequence>/`. Map and raw plots for every configuration are in `results/<mode>/camera_trajectories/<sequence>/` and `results/<mode>/keyframe_trajectories/<sequence>/`.
+All SLAM plots live in `results/`. Map and raw evo plots for every configuration are in `results/<mode>/camera_trajectories/<sequence>/` and `results/<mode>/keyframe_trajectories/<sequence>/`.
 
 Note on the baseline numbers: the baseline plots and `results/baseline/camera_trajectories/summary.txt` come from an earlier baseline run (walking_xyz 0.359 m, walking_static 0.034 m, sitting_xyz 0.016 m). The table above uses the baseline trajectory files committed in `trajectories/baseline/`, which give 0.341 / 0.052 / 0.015 m.
 
@@ -97,6 +97,8 @@ CameraTrajectory.txt / KeyFrameTrajectory.txt  ──►  evo_ape (ATE RMSE) + p
 </p>
 
 ### Masking quality (from `evaluation/validate_masking.py`)
+
+The `evaluation/` folder is only for this mask quality check. All SLAM trajectory plots and ATE numbers are in `results/`.
 
 The validation script flags three failure types per frame: missed detection (no mask saved), partial mask (a connected region far too small for a person) and over-mask (region implausibly large). Numbers below are from `evaluation/validation_report/summary.txt`.
 
@@ -147,10 +149,9 @@ Ghost-Free-SLAM/
 │   ├── run_full_pipeline.sh           # older loop over all sequences in masked mode
 │   └── TUM1_headless.yaml             # ORB-SLAM3 TUM1 config with Viewer.on: 0 for SCC
 │
-├── evaluation/
+├── evaluation/                        # mask quality only, no SLAM plots
 │   ├── validate_masking.py            # masking quality report (missed / partial / over-mask)
-│   ├── validation_report/             # summary.txt + comparison grids + failure frames
-│   └── <sequence>/                    # evo plots for the baseline run
+│   └── validation_report/             # summary.txt + comparison grids + failure frames
 │
 ├── trajectories/<mode>/               # raw ORB-SLAM3 CameraTrajectory / KeyFrameTrajectory (TUM format)
 ├── results/
