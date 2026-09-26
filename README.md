@@ -50,7 +50,7 @@ On `freiburg3_walking_xyz` (two people walking through the scene while the camer
 
 ## 📊 Full results
 
-Absolute Trajectory Error (ATE RMSE, metres) against TUM ground truth after SE(3) alignment, computed with `evo_ape tum <groundtruth> <trajectory> -va`. Both the camera trajectory (a pose for every frame) and the keyframe trajectory (the frames ORB-SLAM3 keeps for mapping and bundle adjustment) are evaluated. This is Table 1 of our final report, and every number can be reproduced from the files in `trajectories/`.
+Absolute Trajectory Error (ATE RMSE, metres) against TUM ground truth after SE(3) alignment, computed with `evo_ape tum <groundtruth> <trajectory> -va`. Both the camera trajectory (a pose for every frame) and the keyframe trajectory (the frames ORB-SLAM3 keeps for mapping and bundle adjustment) are evaluated. Every number can be reproduced from the trajectory files in `trajectories/`.
 
 | Sequence | Baseline camera | Baseline keyframe | Masked camera | Masked keyframe | Reprojection camera | Reprojection keyframe |
 |---|---:|---:|---:|---:|---:|---:|
@@ -70,7 +70,7 @@ All three configurations track every sequence end to end (1230 / 723 / 833 camer
 
 ### Result plots
 
-Camera trajectories against ground truth (dashed), taken directly from `results/`. Colour is APE per pose. Map (`*_map.png`) and APE-over-time (`*_raw.png`) plots for camera and keyframe trajectories are in `results/<mode>/camera_trajectories/<sequence>/` and `results/<mode>/keyframe_trajectories/<sequence>/`.
+Camera trajectories against ground truth (dashed line). Colour shows the position error (APE) at each pose. More plots, including keyframe trajectories and error over time, are in `results/<mode>/camera_trajectories/<sequence>/` and `results/<mode>/keyframe_trajectories/<sequence>/`.
 
 <table>
   <tr>
@@ -98,12 +98,6 @@ Camera trajectories against ground truth (dashed), taken directly from `results/
     <td><img src="results/reprojection/camera_trajectories/walking_xyz/walking_xyz_camera_map.png" width="260"></td>
   </tr>
 </table>
-
-Notes on the plots:
-
-* **Baseline plots** are the same images as report Figure 9. They were made from an earlier baseline run (RMSE 0.0157 / 0.0340 / 0.3588 m in their `result.zip`, also in `results/baseline/camera_trajectories/summary.txt`). The table above uses the baseline trajectory files committed in `trajectories/baseline/`, which give 0.0151 / 0.0517 / 0.3412 m, the same as the report's Table 1.
-* **Masked plots** are the same images as report Figure 10. The masked camera plot for `walking_xyz` matches the masked trajectory. The masked plots for `sitting_xyz` and `walking_static` (camera and keyframe) and the masked keyframe plot for `walking_xyz` are currently the same image files as the reprojection plots, so their colour scales follow the reprojection trajectories. They will be re-exported from `trajectories/masked/`.
-* **Reprojection plots** match the reprojection trajectories and report Figure 11.
 
 ---
 
@@ -173,7 +167,7 @@ Masking removes moving people, but it also throws away the static background beh
 
 Recovery grows with camera motion. In `sitting_xyz` only about 5% of masked pixels are recovered, while the walking sequences recover more thanks to larger viewpoint changes. Overall coverage stays small, which is why reprojection adds little on top of masking.
 
-**Note on the reprojection code version.** The multi-frame method described above (offsets 1, 2, 3, 5, 8 and 10 with a depth z-buffer) is the one described in the final report, which the report uses for its reprojection results and its recovery-vs-lookback analysis. It was implemented by Tianqin Fu in commit `f9d6f006` (26 April 2026). A later cleanup of `reprojection/reproject.py` (commits `25d31061` and `fabf86ac`, 27 to 28 April) first reduced the offsets to 1, 2, 3, 5, 8 and then simplified the script to use only the single previous frame, and that simplified version is what is on `main` now. To run the multi-frame version as described in the report:
+**Code note.** These results use the multi-frame version of `reproject.py` (commit `f9d6f006`). The file on `main` is a later, simplified single-frame version. To run the multi-frame version:
 
 ```bash
 git show f9d6f006:reprojection/reproject.py > reprojection/reproject_multiframe.py
