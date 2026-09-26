@@ -41,8 +41,8 @@ On `freiburg3_walking_xyz` (two people walking through the scene while the camer
     <td><img src="results/masked/camera_trajectories/walking_xyz/walking_xyz_camera_map.png" width="420"></td>
   </tr>
   <tr>
-    <td>Camera trajectory vs ground truth (dashed). Colour is APE, up to 0.835 m. The estimate drifts far off the ground-truth path. Same plot as report Figure 9.</td>
-    <td>Camera trajectory vs ground truth (dashed). Colour is APE, up to 0.071 m. The estimate stays on the ground-truth path. Same plot as report Figure 10.</td>
+    <td>Camera trajectory vs ground truth (dashed). Colour is APE, up to 0.835 m. The estimate drifts far off the ground-truth path.</td>
+    <td>Camera trajectory vs ground truth (dashed). Colour is APE, up to 0.071 m. The estimate stays on the ground-truth path. </td>
   </tr>
 </table>
 
